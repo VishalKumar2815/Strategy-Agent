@@ -9,6 +9,9 @@ agent = StrategyOrchestratorAgent()
 
 
 @app.route("/", methods=["GET", "POST"])
+def entry_point():
+    return render_template("index.html")
+    
 @app.route("/agent", methods=["GET", "POST"])
 def defence_agent():
     if request.method == "POST":
