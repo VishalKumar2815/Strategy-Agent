@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategy Agent — Mission Briefing Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #12160f;
+    --panel:     #1a1f16;
+    --panel-2:   #20261b;
+    --line:      #33392a;
+    --line-soft: #262b1f;
+    --ink:       #e9e6da;
+    --ink-dim:   #9aa091;
+    --ink-faint: #656b58;
+    --amber:     #c9a227;
+    --amber-dim: #8c7220;
+    --threat-hi: #b5493f;
+    --threat-md: #c9a227;
+    --threat-lo: #6f9463;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  ::selection { background: var(--amber); color: #14180f; }
+
+  /* ---------- topo contour background ---------- */
+  .topo-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.35;
+  }
+  .topo-bg svg { width: 100%; height: 100%; }
+  .topo-bg path {
+    fill: none;
+    stroke: var(--amber-dim);
+    stroke-width: 1;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    position: relative;
+    border-bottom: 1px solid var(--line);
+    padding: 20px clamp(20px, 5vw, 56px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+  }
+  .brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--amber);
+    display: inline-block;
+    box-shadow: 0 0 8px var(--amber);
+  }
+  .status-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    text-transform: uppercase;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    padding: clamp(48px, 9vw, 100px) clamp(20px, 5vw, 56px) 60px;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .hero-inner { position: relative; z-index: 2; max-width: 880px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: clamp(28px, 4.4vw, 46px);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 18px;
+  }
+  .hero p.sub {
+    font-size: clamp(15px, 1.6vw, 17px);
+    color: var(--ink-dim);
+    max-width: 620px;
+    margin-bottom: 40px;
+  }
+
+  /* ---------- terminal input (signature element) ---------- */
+  .console {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    max-width: 720px;
+  }
+  .console-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .console-bar .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+  .console-body { padding: 18px; }
+  .prompt-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .prompt-row .caret { color: var(--amber); flex-shrink: 0; }
+  #query-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    min-height: 44px;
+  }
+  #query-input::placeholder { color: var(--ink-faint); }
+
+  .console-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-top: 1px solid var(--line);
+  }
+  .hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  button#submit-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--amber);
+    color: #14180f;
+    border: none;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  button#submit-btn:hover { background: #ddb531; }
+  button#submit-btn:active { transform: scale(0.98); }
+  button#submit-btn:focus-visible,
+  #query-input:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+  }
+
+  .sample-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .sample-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .sample-chip:hover { border-color: var(--amber-dim); color: var(--ink); }
+
+  /* ---------- module tiles ---------- */
+  .modules {
+    padding: 56px clamp(20px, 5vw, 56px);
+    border-bottom: 1px solid var(--line);
+  }
+  .modules-head {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 22px;
+  }
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .module {
+    background: var(--panel);
+    padding: 20px;
+    transition: background 0.2s ease;
+  }
+  .module:hover { background: var(--panel-2); }
+  .module-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .module h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .module p {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-bottom: 14px;
+  }
+  .meter {
+    height: 3px;
+    background: var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .meter span {
+    position: absolute;
+    inset: 0;
+    background: var(--amber-dim);
+    width: var(--fill, 60%);
+  }
+
+  /* ---------- output panel ---------- */
+  .output {
+    padding: 56px clamp(20px, 5vw, 56px) 80px;
+    display: none;
+  }
+  .output.visible { display: block; animation: rise 0.35s ease; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .output-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .output-head h2 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .threat-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 1px solid currentColor;
+  }
+  .threat-tag.high { color: var(--threat-hi); }
+  .threat-tag.medium { color: var(--threat-md); }
+  .threat-tag.low { color: var(--threat-lo); }
+
+  .brief-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .brief-card { background: var(--panel); padding: 22px; }
+  .brief-card h4 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .brief-card p, .brief-card li {
+    font-size: 13.5px;
+    color: var(--ink-dim);
+  }
+  .brief-card strong { color: var(--ink); font-weight: 600; }
+  .brief-card ul { list-style: none; }
+  .brief-card li { padding: 4px 0; border-bottom: 1px dashed var(--line-soft); }
+  .brief-card li:last-child { border-bottom: none; }
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--line-soft);
+    font-size: 13px;
+  }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-row span:first-child { color: var(--ink-faint); }
+  .kv-row span:last-child { font-family: var(--mono); color: var(--ink); }
+
+  .route-option {
+    border: 1px solid var(--line-soft);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .route-option.recommended { border-color: var(--amber-dim); background: rgba(201,162,39,0.06); }
+  .route-option .route-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink);
+    display: flex;
+    justify-content: space-between;
+  }
+  .route-option.recommended .route-name::after {
+    content: 'RECOMMENDED';
+    font-size: 9px;
+    color: var(--amber);
+    letter-spacing: 0.06em;
+  }
+  .route-risk { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+
+  .assumptions-note {
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    border-left: 2px solid var(--amber-dim);
+    padding-left: 10px;
+  }
+
+  .error-note {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--threat-hi);
+  }
+
+  .summary-card {
+    grid-column: 1 / -1;
+    background: var(--panel);
+    padding: 22px;
+    border: 1px solid var(--line);
+    margin-bottom: 1px;
+  }
+  .summary-card h4 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .summary-card p {
+    font-size: 14px;
+    color: var(--ink-dim);
+    white-space: pre-wrap;
+  }
+
+  footer {
+    padding: 20px clamp(20px, 5vw, 56px);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 560px) {
+    .console-footer { flex-direction: column; align-items: stretch; gap: 10px; }
+    button#submit-btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Strategy Agent</div>
+  <div class="status-chip">Pipeline: Ready</div>
+</header>
+
+<section class="hero">
+  <div class="topo-bg" id="topo-bg"></div>
+  <div class="hero-inner">
+    <div class="eyebrow">Mission Briefing Console</div>
+    <h1>Describe the mission.<br>Get a structured briefing back.</h1>
+    <p class="sub">Type a plain-language mission description below. The console extracts terrain, objective, force size, threat level, and constraints, then runs them through the strategy, resource, and route modules.</p>
+
+    <form class="console" method="POST" action="{{ url_for('defence_agent') }}">
+      <div class="console-bar">
+        <span class="dot"></span>
+        <span>query.in</span>
+      </div>
+      <div class="console-body">
+        <div class="prompt-row">
+          <span class="caret">&gt;</span>
+          <textarea id="query-input" name="question" rows="2" placeholder="e.g. Secure an urban area at night with 40 personnel, high threat, 12 hour window, minimize civilian disruption">{{ query or '' }}</textarea>
+        </div>
+      </div>
+      <div class="console-footer">
+        <span class="hint" id="hint-text">
+          {% if error %}{{ error }}
+          {% elif result %}parsed · pipeline executed
+          {% else %}awaiting input{% endif %}
+        </span>
+        <button id="submit-btn" type="submit">Generate Briefing</button>
+      </div>
+    </form>
+    <div class="sample-row">
+      <span class="sample-chip" data-sample="Escort a convoy through the desert in clear weather with 25 personnel, medium threat, 8 hour window, fuel resupply needed every 150km">Desert escort</span>
+      <span class="sample-chip" data-sample="Run a reconnaissance mission in the mountains under heavy fog with 10 personnel, low threat, 24 hour window, stealth priority">Mountain recon</span>
+      <span class="sample-chip" data-sample="Deliver relief supplies through a riverine area during a storm with 30 personnel, medium threat, 18 hour window, flood-damaged bridges">Riverine relief</span>
+    </div>
+  </div>
+</section>
+
+<section class="modules">
+  <div class="modules-head">Pipeline modules</div>
+  <div class="module-grid">
+    <div class="module">
+      <div class="module-id">TERRAIN</div>
+      <h3>Terrain Analysis</h3>
+      <p>Reads mobility, cover, visibility, and hazard profile for the stated terrain and weather.</p>
+      <div class="meter" style="--fill:70%"><span></span></div>
+    </div>
+    <div class="module">
+      <div class="module-id">OBJECTIVE</div>
+      <h3>Objective Analysis</h3>
+      <p>Classifies posture, priority, and success criteria from the stated mission type.</p>
+      <div class="meter" style="--fill:55%"><span></span></div>
+    </div>
+    <div class="module">
+      <div class="module-id">RESOURCES</div>
+      <h3>Resource Estimator</h3>
+      <p>Scales required personnel and equipment against terrain and threat conditions.</p>
+      <div class="meter" style="--fill:80%"><span></span></div>
+    </div>
+    <div class="module">
+      <div class="module-id">ROUTES</div>
+      <h3>Route Estimator</h3>
+      <p>Scores candidate routes on composite risk and transit time, flags the lowest-risk option.</p>
+      <div class="meter" style="--fill:65%"><span></span></div>
+    </div>
+  </div>
+</section>
+
+{% if result %}
+<section class="output visible" id="output">
+  <div class="output-head">
+    <h2 id="output-title">{{ scenario.objective.replace('_', ' ') }} / {{ scenario.terrain }}</h2>
+    <span class="threat-tag {{ scenario.threat_level }}" id="threat-tag">{{ scenario.threat_level }} threat</span>
+  </div>
+
+  {% if summary %}
+  <div class="summary-card">
+    <h4>Mission Briefing</h4>
+    <p>{{ summary }}</p>
+  </div>
+  {% endif %}
+
+  <div class="brief-grid">
+    <div class="brief-card" id="card-strategy">
+      <h4>Strategy</h4>
+      <p style="margin-bottom:10px;"><strong>{{ result['1_engagement_strategy'].approach }}</strong></p>
+      <div class="kv-row"><span>Posture</span><span>{{ result['1_engagement_strategy'].recommended_posture }}</span></div>
+      <div class="kv-row"><span>Priority</span><span>{{ result['1_engagement_strategy'].priority }}</span></div>
+    </div>
+
+    <div class="brief-card" id="card-resources">
+      <h4>Resources</h4>
+      <div class="kv-row"><span>Personnel</span><span>{{ result['2_resource_requirements'].personnel }}</span></div>
+      {% for key, value in result['2_resource_requirements'].estimated_resources.items() %}
+      <div class="kv-row"><span>{{ key.replace('_', ' ') }}</span><span>{{ value }}</span></div>
+      {% endfor %}
+    </div>
+
+    <div class="brief-card" id="card-routes">
+      <h4>Routes</h4>
+      {% for name, route in result['3_route_plan'].candidate_routes.items() %}
+      <div class="route-option {% if name == result['3_route_plan'].recommended_route %}recommended{% endif %}">
+        <div class="route-name">{{ name.replace('_', ' ') }}</div>
+        <div class="route-risk">risk {{ route.risk_score }} · {{ route.est_time_hours }}h · {{ route.description }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="brief-card" id="card-success">
+      <h4>Success Criteria</h4>
+      <ul>
+        {% for item in result.success_criteria %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="brief-card" id="card-constraints">
+      <h4>Constraints</h4>
+      <ul>
+        {% if result.constraints_considered %}
+          {% for item in result.constraints_considered %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        {% else %}
+          <li>none specified</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  {% if assumptions %}
+  <div class="assumptions-note" id="assumptions-note">
+    Defaulted (not mentioned in query): {{ assumptions | join(', ') }}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<footer>
+  <span>Strategy Agent Console</span>
+  <span>Flask backend — Python strategy pipeline</span>
+</footer>
+
+<script>
+/* ---------- topographic contour background ---------- */
+(function renderTopo() {
+  const container = document.getElementById('topo-bg');
+  const w = 1200, h = 600;
+  let paths = '';
+  for (let i = 0; i < 9; i++) {
+    const yOffset = i * 70 - 100;
+    const amp = 18 + i * 2.5;
+    let d = `M -50 ${yOffset}`;
+    for (let x = 0; x <= w + 100; x += 100) {
+      const y = yOffset + Math.sin(x / 140 + i) * amp;
+      d += ` L ${x} ${y}`;
+    }
+    paths += `<path d="${d}" />`;
+  }
+  container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${paths}</svg>`;
+})();
+
+const input = document.getElementById('query-input');
+const hint = document.getElementById('hint-text');
+
+document.querySelectorAll('.sample-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    input.value = chip.dataset.sample;
+    input.focus();
+    hint.textContent = 'sample loaded — press Generate Briefing';
+  });
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    input.closest('form').requestSubmit();
+  }
+});
+
+const output = document.getElementById('output');
+if (output) {
+  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+</script>
+
+</body>
+</html>
