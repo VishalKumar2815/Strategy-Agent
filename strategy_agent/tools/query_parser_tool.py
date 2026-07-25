@@ -19,8 +19,8 @@ cli.py) needs no changes.
 import re
 from typing import Any, Dict, List
 
-from strategy_agent.models import Scenario
-from strategy_agent.tools.base import BaseTool
+from models import Scenario
+from tools.base import BaseTool
 
 
 class QueryParserTool(BaseTool):
