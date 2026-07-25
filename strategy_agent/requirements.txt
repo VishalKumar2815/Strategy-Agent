@@ -3,3 +3,4 @@ langchain-groq>=0.2.0
 pytest>=8.0
 gunicorn
 flask
+dotenv
