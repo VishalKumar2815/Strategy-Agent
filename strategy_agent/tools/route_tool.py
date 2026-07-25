@@ -8,8 +8,8 @@ so it runs last in the pipeline.
 
 from typing import Any, Dict
 
-from strategy_agent.models import Scenario
-from strategy_agent.tools.base import BaseTool
+from models import Scenario
+from tools.base import BaseTool
 
 
 class RouteEstimatorTool(BaseTool):
