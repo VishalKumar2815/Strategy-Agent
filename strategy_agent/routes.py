@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 
-from strategy_agent.agent2 import StrategyOrchestratorAgent
-from strategy_agent.tools.query_parser_tool import QueryParserTool
+from agent2 import StrategyOrchestratorAgent
+from tools.query_parser_tool import QueryParserTool
 
 app = Flask(__name__)
 
