@@ -35,13 +35,13 @@ import json
 from typing import Any, Dict, Optional
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
-from strategy_agent.models import Scenario
-from strategy_agent.tools.terrain_tool import TerrainAnalysisTool
-from strategy_agent.tools.objective_tool import ObjectiveAnalysisTool
-from strategy_agent.tools.resource_tool import ResourceEstimatorTool
-from strategy_agent.tools.route_tool import RouteEstimatorTool
-from strategy_agent.tools.query_parser_tool import QueryParserTool
-from strategy_agent.tools.escape_tool import IncidentResponseTool
+from models import Scenario
+from tools.terrain_tool import TerrainAnalysisTool
+from tools.objective_tool import ObjectiveAnalysisTool
+from tools.resource_tool import ResourceEstimatorTool
+from tools.route_tool import RouteEstimatorTool
+from tools.query_parser_tool import QueryParserTool
+from tools.escape_tool import IncidentResponseTool
 
 
 
