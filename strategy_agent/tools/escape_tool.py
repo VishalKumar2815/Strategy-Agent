@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
-from strategy_agent.tools.base import BaseTool
+from tools.base import BaseTool
 
 try:
     from langchain_groq import ChatGroq
