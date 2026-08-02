@@ -1,9 +1,9 @@
 import os
 from flask import Flask, render_template, request
 
-from strategy_agent.agent2 import StrategyOrchestratorAgent
-from strategy_agent.tools.query_parser_tool import QueryParserTool
-from strategy_agent.tools.escape_tool import IncidentResponseTool  # adjust path to match wherever you place escape_tool_optimized.py
+from agent2 import StrategyOrchestratorAgent
+from tools.query_parser_tool import QueryParserTool
+from tools.escape_tool import IncidentResponseTool  # adjust path to match wherever you place escape_tool_optimized.py
 
 app = Flask(__name__)
 
